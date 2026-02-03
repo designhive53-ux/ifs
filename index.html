@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IFS - Container Management</title>
+    <style>
+        /* Glassmorphism Base Styles */
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --text-color: #ffffff;
+            --accent-color: #00d2ff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* Beautiful Gradient Background */
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            margin: 0;
+            padding: 20px;
+            color: var(--text-color);
+            min-height: 100vh;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glass Utility Class */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: var(--glass-shadow);
+        }
+
+        /* Login Screen */
+        #loginSection {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 90vh;
+        }
+
+        .login-card {
+            padding: 40px;
+            width: 350px;
+            text-align: center;
+        }
+
+        .login-card h1 {
+            margin-top: 0;
+            font-size: 3rem;
+            letter-spacing: 5px;
+            color: var(--accent-color);
+            text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+        }
+
+        /* App Container */
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: none; /* Hidden until logged in */
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 28px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            border: none;
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(90deg, #ff416c, #ff4b2b);
+            border: none;
+        }
+
+        /* Inputs */
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        /* Table Styles */
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px; /* Adjusted font size slightly for more columns */
+        }
+
+        th {
+            padding: 12px 10px; /* Adjusted padding */
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 11px;
+            color: var(--accent-color);
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            white-space: nowrap; /* Prevent text wrapping */
+        }
+
+        tbody tr {
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 10px; /* Slightly smaller */
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-yes {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid #10b981;
+        }
+
+        .status-no {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid #ef4444;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .close-btn:hover { color: white; }
+
+        .form-section-title {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--accent-color);
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        /* Detail View */
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .detail-label { font-weight: bold; color: rgba(255,255,255,0.7); font-size: 13px; }
+        .detail-value { color: white; text-align: right; }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            border: 1px solid var(--accent-color);
+            display: none;
+            z-index: 2000;
+        }
+
+        .error-msg {
+            color: #ff4b2b;
+            font-size: 12px;
+            margin-top: -10px;
+            margin-bottom: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PASSWORD LOGIN SECTION -->
+    <div id="loginSection">
+        <div class="glass-panel login-card">
+            <h1>IFS</h1>
+            <p style="margin-bottom: 20px; font-size: 14px; opacity: 0.8;">Container Database System</p>
+            
+            <input type="password" id="passInput" placeholder="Enter Password" onkeypress="handleEnter(event)">
+            <button class="btn btn-primary" style="width: 100%;" onclick="checkPassword()">Unlock System</button>
+            <p id="loginError" class="error-msg">Wrong Password!</p>
+        </div>
+    </div>
+
+    <!-- MAIN APP SECTION (Hidden Initially) -->
+    <div id="appSection" class="glass-panel app-container">
+        <header>
+            <h2>IFS Records</h2>
+            <button class="btn btn-primary" onclick="openAddModal()">+ New Entry</button>
+        </header>
+
+        <div style="margin-bottom: 15px;">
+            <input type="text" id="searchInput" placeholder="Search Container, BL, Bilty, or Truck..." onkeyup="renderTable()">
+        </div>
+
+        <div class="table-responsive">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Container No</th>
+                        <th>BL No</th> <!-- ADDED HEADER -->
+                        <th>Bilty No</th> <!-- ADDED HEADER -->
+                        <th>Shipping Line</th>
+                        <th>Truck No</th>
+                        <th>Rate</th>
+                        <th>PIA Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+            <div id="emptyState" style="text-align: center; padding: 40px; opacity: 0.6; display: none;">
+                No records found.
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS (Add/Edit & Detail) -->
+    <div id="entryModal" class="modal">
+        <div class="glass-panel modal-content">
+            <span class="close-btn" onclick="closeModal('entryModal')">&times;</span>
+            <h2 id="modalTitle">Add New Entry</h2>
+            
+            <form id="dataForm" onsubmit="handleFormSubmit(event)">
+                <input type="hidden" id="editId">
+                
+                <div class="form-section-title">Logistics Info</div>
+                <input type="text" id="containerNo" required placeholder="Container No *" style="background: rgba(0,0,0,0.3);">
+                <input type="text" id="blNo" placeholder="BL No" style="background: rgba(0,0,0,0.3);">
+                <input type="text" id="biltyNo" placeholder="Bilty No" style="background: rgba(0,0,0,0.3);">
+                <input type="text" id="shippingLine" placeholder="Shipping Line" style="background: rgba(0,0,0,0.3);">
+                <input type="text" id="truckNo" required placeholder="Truck No *" style="background: rgba(0,0,0,0.3);">
+                <input type="number" id="rate" placeholder="Rate (PKR)" style="background: rgba(0,0,0,0.3);">
+                
+                <div class="form-section-title">Buyer & Delivery</div>
+                <input type="text" id="buyerName" placeholder="Buyer Name" style="background: rgba(0,0,0,0.3);">
+                <input type="tel" id="buyerPhone" placeholder="Phone Number" style="background: rgba(0,0,0,0.3);">
+                <input type="text" id="buyerId" placeholder="IUD / CNIC" style="background: rgba(0,0,0,0.3);">
+                <input type="number" id="deliveryDays" placeholder="Delivery Days (e.g. 3)" style="background: rgba(0,0,0,0.3);">
+                
+                <label style="font-size: 14px; display: block; margin-bottom: 5px;">PIA Status</label>
+                <select id="piaStatus" style="background: rgba(0,0,0,0.3); margin-top: 0;">
+                    <option value="No" style="background: #333;">Pending</option>
+                    <option value="Yes" style="background: #333;">Updated</option>
+                </select>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px;">Save Record</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="detailModal" class="modal">
+        <div class="glass-panel modal-content">
+            <span class="close-btn" onclick="closeModal('detailModal')">&times;</span>
+            <h2>Full Details</h2>
+            <div id="detailContent"></div>
+            <div style="margin-top: 20px; text-align: right; display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="btn btn-danger" onclick="deleteCurrentRecord()">Delete</button>
+                <button class="btn btn-primary" onclick="editCurrentRecord()">Edit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">Action Successful</div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const SYSTEM_PASSWORD = "ifs-2.0"; 
+
+        // Database Variables
+        const STORAGE_KEY = 'IFS_Container_DB';
+        let containers = [];
+        let currentDetailId = null;
+
+        // --- LOGIN LOGIC ---
+        function checkPassword() {
+            const input = document.getElementById('passInput').value;
+            const errorMsg = document.getElementById('loginError');
+
+            if (input === SYSTEM_PASSWORD) {
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('appSection').style.display = 'block';
+                initApp();
+            } else {
+                errorMsg.style.display = 'block';
+                document.getElementById('passInput').value = '';
+                document.getElementById('passInput').focus();
+            }
+        }
+
+        function handleEnter(e) {
+            if(e.key === 'Enter') checkPassword();
+        }
+
+        // --- APP LOGIC (now uses API with local fallback) ---
+        const API_BASE = window.API_BASE || 'http://localhost:3000/api';
+
+        async function initApp() {
+            // Try to load from server API first
+            try {
+                const res = await fetch(API_BASE + '/items');
+                if (!res.ok) throw new Error('API fetch failed');
+                const items = await res.json();
+                // Map server items to local shape used by UI
+                containers = items.map(it => ({
+                    id: it.id,
+                    containerNo: it.name || ('Item ' + it.id),
+                    blNo: it.bl_no || '',
+                    biltyNo: it.bilty_no || '',
+                    shippingLine: it.description || '',
+                    truckNo: it.truck_no || '',
+                    rate: it.rate || 0,
+                    piaStatus: it.pia_status || 'No',
+                    buyerName: it.buyer_name || '',
+                    buyerPhone: it.buyer_phone || '',
+                    buyerId: it.buyer_id || '',
+                    deliveryDays: it.delivery_days || ''
+                }));
+                saveToStorage();
+            } catch (err) {
+                // If API fails, fall back to localStorage (existing demo data)
+                const storedData = localStorage.getItem(STORAGE_KEY);
+                if (storedData) {
+                    containers = JSON.parse(storedData);
+                } else {
+                    containers = [
+                        { id: 1, containerNo: 'MSCU987654', shippingLine: 'Maersk', biltyNo: 'B-101', blNo: 'BL-202', truckNo: 'TRK-555', piaStatus: 'Yes', rate: 50000, buyerName: 'ABC Traders', buyerPhone: '0300-1234567', buyerId: '12345-6', deliveryDays: 2 }
+                    ];
+                    saveToStorage();
+                }
+            }
+            renderTable();
+        }
+
+        function saveToStorage() {
+            // keep a local copy for offline/demo use
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(containers));
+        }
+
+        async function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const searchVal = document.getElementById('searchInput').value.toLowerCase();
+            const emptyState = document.getElementById('emptyState');
+            
+            tbody.innerHTML = '';
+            
+            let filteredData = containers.filter(item => {
+                return item.containerNo.toLowerCase().includes(searchVal) || 
+                       item.truckNo.toLowerCase().includes(searchVal) ||
+                       item.blNo.toLowerCase().includes(searchVal) ||
+                       item.biltyNo.toLowerCase().includes(searchVal);
+            });
+
+            if (filteredData.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            } else {
+                emptyState.style.display = 'none';
+            }
+
+            filteredData.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.onclick = (e) => {
+                    if(e.target.tagName === 'BUTTON') return;
+                    openDetailModal(item.id);
+                };
+
+                const statusClass = item.piaStatus === 'Yes' ? 'status-yes' : 'status-no';
+                const statusText = item.piaStatus === 'Yes' ? 'Updated' : 'Pending';
+
+                // UPDATED: BL and Bilty Added Here
+                tr.innerHTML = `
+                    <td><strong>${item.containerNo}</strong></td>
+                    <td>${item.blNo || '-'}</td>
+                    <td>${item.biltyNo || '-'}</td>
+                    <td>${item.shippingLine}</td>
+                    <td>${item.truckNo}</td>
+                    <td>PKR ${Number(item.rate).toLocaleString()}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td><button class="btn" style="padding: 4px 10px; font-size: 11px;" onclick="openDetailModal(${item.id})">View</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- MODAL FUNCTIONS ---
+        function openAddModal() {
+            document.getElementById('modalTitle').innerText = 'Add New Container';
+            document.getElementById('dataForm').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('entryModal').style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('editId').value;
+            const payload = {
+                name: document.getElementById('containerNo').value,
+                description: document.getElementById('shippingLine').value,
+                bl_no: document.getElementById('blNo').value,
+                bilty_no: document.getElementById('biltyNo').value,
+                truck_no: document.getElementById('truckNo').value,
+                rate: Number(document.getElementById('rate').value) || 0,
+                pia_status: document.getElementById('piaStatus').value,
+                buyer_name: document.getElementById('buyerName').value,
+                buyer_phone: document.getElementById('buyerPhone').value,
+                buyer_id: document.getElementById('buyerId').value,
+                delivery_days: document.getElementById('deliveryDays').value
+            };
+
+            try {
+                if (editId) {
+                    await fetch(API_BASE + '/items/' + editId, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                } else {
+                    const res = await fetch(API_BASE + '/items', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const created = await res.json();
+                    payload.id = created.id;
+                }
+                // Refresh from API when possible
+                await initApp();
+                closeModal('entryModal');
+                showToast('Saved Successfully');
+            } catch (err) {
+                // fallback: update localStorage only
+                if (editId) {
+                    const index = containers.findIndex(c => c.id == editId);
+                    if (index !== -1) containers[index] = { ...containers[index], ...payload };
+                } else {
+                    containers.unshift({ id: Date.now(), ...payload });
+                }
+                saveToStorage();
+                renderTable();
+                closeModal('entryModal');
+                showToast('Saved Locally (offline)');
+            }
+        }
+
+        function openDetailModal(id) {
+            currentDetailId = id;
+            const item = containers.find(c => c.id === id);
+            if (!item) return;
+
+            // UPDATED: Added BL and Bilty in details view too
+            document.getElementById('detailContent').innerHTML = `
+                <div class="form-section-title">Container Info</div>
+                <div class="detail-row"><span class="detail-label">Container No:</span> <span class="detail-value">${item.containerNo}</span></div>
+                <div class="detail-row"><span class="detail-label">BL No:</span> <span class="detail-value">${item.blNo || '-'}</span></div>
+                <div class="detail-row"><span class="detail-label">Bilty No:</span> <span class="detail-value">${item.biltyNo || '-'}</span></div>
+                <div class="detail-row"><span class="detail-label">Shipping Line:</span> <span class="detail-value">${item.shippingLine}</span></div>
+                <div class="detail-row"><span class="detail-label">Truck No:</span> <span class="detail-value">${item.truckNo}</span></div>
+                <div class="detail-row"><span class="detail-label">Rate:</span> <span class="detail-value">${item.rate}</span></div>
+                <div class="detail-row"><span class="detail-label">PIA Status:</span> <span class="detail-value">${item.piaStatus}</span></div>
+                
+                <div class="form-section-title">Party Info</div>
+                <div class="detail-row"><span class="detail-label">Buyer Name:</span> <span class="detail-value">${item.buyerName || '-'}</span></div>
+                <div class="detail-row"><span class="detail-label">Phone:</span> <span class="detail-value">${item.buyerPhone || '-'}</span></div>
+                <div class="detail-row"><span class="detail-label">IUD:</span> <span class="detail-value">${item.buyerId || '-'}</span></div>
+                <div class="detail-row"><span class="detail-label">Deadline:</span> <span class="detail-value">${item.deliveryDays ? item.deliveryDays + ' Days' : '-'}</span></div>
+            `;
+            document.getElementById('detailModal').style.display = 'flex';
+        }
+
+        async function deleteCurrentRecord() {
+            if (!confirm('Delete this record permanently?')) return;
+            try {
+                await fetch(API_BASE + '/items/' + currentDetailId, { method: 'DELETE' });
+                await initApp();
+                closeModal('detailModal');
+                showToast('Deleted');
+            } catch (err) {
+                // fallback to local delete
+                containers = containers.filter(c => c.id !== currentDetailId);
+                saveToStorage();
+                renderTable();
+                closeModal('detailModal');
+                showToast('Deleted Locally');
+            }
+        }
+
+        function editCurrentRecord() {
+            const item = containers.find(c => c.id === currentDetailId);
+            closeModal('detailModal');
+            document.getElementById('modalTitle').innerText = 'Edit Record';
+            document.getElementById('editId').value = item.id;
+            // Fill inputs
+            ['containerNo','shippingLine','biltyNo','blNo','truckNo','rate','buyerName','buyerPhone','buyerId','deliveryDays'].forEach(f => {
+                document.getElementById(f).value = item[f];
+            });
+            document.getElementById('piaStatus').value = item.piaStatus;
+            document.getElementById('entryModal').style.display = 'flex';
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 3000);
+        }
+
+        window.onclick = function(e) {
+            if (e.target.classList.contains('modal')) e.target.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
